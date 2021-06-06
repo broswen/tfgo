@@ -18,6 +18,7 @@ Lambda code is managed with Go modules and a Makefile for compiling and zipping 
 
 ### Deploy
 ```
+terraform init
 go get -d -v ./...
 make
 terraform apply --var-file ./variables/terraform.${stage}.tfvars
