@@ -4,6 +4,8 @@ This is a simple proof of concept project. A SNS Topic that publishes to an SQS 
 
 The Lambda is written in Go and the AWS resources are managed with Terraform.
 
+![diagram](./images/diagram.png)
+
 ### Stages
 
 Stage specific variables are set in `./variables` folder with .tfvars files.
