@@ -5,14 +5,22 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
+	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
 type PrinterResponse struct {
 	Message string `json:"message"`
 }
+
+var ddbClient *dynamodb.Client
 
 func Handler(ctx context.Context, sqsEvent events.SQSEvent) (PrinterResponse, error) {
 	processed := 0
@@ -35,6 +43,15 @@ func Handler(ctx context.Context, sqsEvent events.SQSEvent) (PrinterResponse, er
 			log.Println("Error marshalling sns entity", err.Error())
 			continue
 		}
+		ddbClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+			TableName: aws.String(os.Getenv("table")),
+			Item: map[string]types.AttributeValue{
+				"PK":      &types.AttributeValueMemberS{Value: snsEntity.MessageID},
+				"SK":      &types.AttributeValueMemberS{Value: time.Now().Format(time.RFC3339)},
+				"Message": &types.AttributeValueMemberS{Value: snsEntity.Message},
+				"Subject": &types.AttributeValueMemberS{Value: snsEntity.Subject},
+			},
+		})
 		fmt.Println(string(j))
 		processed++
 	}
@@ -43,7 +60,11 @@ func Handler(ctx context.Context, sqsEvent events.SQSEvent) (PrinterResponse, er
 }
 
 func init() {
-
+	cfg, err := config.LoadDefaultConfig(context.TODO())
+	if err != nil {
+		log.Fatal(err)
+	}
+	ddbClient = dynamodb.NewFromConfig(cfg)
 }
 
 func main() {

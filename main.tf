@@ -58,6 +58,24 @@ resource "aws_sns_topic_subscription" "topic_subscription" {
   endpoint  = aws_sqs_queue.queue.arn
 }
 
+resource "aws_dynamodb_table" "table" {
+  billing_mode = "PAY_PER_REQUEST"
+  name         = "${var.project_name}-${var.stage}-table"
+  hash_key     = "PK"
+  range_key    = "SK"
+
+  attribute {
+    name = "PK"
+    type = "S"
+  }
+
+  attribute {
+    name = "SK"
+    type = "S"
+  }
+
+}
+
 resource "aws_iam_role_policy_attachment" "basic_execution_role" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
   role       = aws_iam_role.printer_role.name
@@ -95,6 +113,14 @@ EOF
         "sqs:GetQueueAttributes"
       ],
       "Resource": "${aws_sqs_queue.queue.arn}"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:PutItem",
+        "dynamodb:GetItem"
+      ],
+      "Resource": "${aws_dynamodb_table.table.arn}"
     }
   ]
 }
@@ -127,6 +153,7 @@ resource "aws_lambda_function" "printer_lambda" {
   environment {
     variables = {
       stage = var.stage
+      table = aws_dynamodb_table.table.id
     }
   }
 }
