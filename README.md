@@ -1,6 +1,6 @@
 
 ## tfgo
-This is a simple proof of concept project. A SNS Topic that publishes to an SQS Queue with a Lambda function that consumes the messages.
+This is a simple proof of concept project. A SNS Topic that publishes to an SQS Queue with a Lambda function that consumes the messages and stores them in a DynamoDB table.
 
 The Lambda is written in Go and the AWS resources are managed with Terraform.
 
